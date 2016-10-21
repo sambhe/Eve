@@ -302,11 +302,11 @@ static void do_time(block bk, perf p, execf n, value hour, value minute, value s
     stop_perf(p, pp);
 }
 
-static CONTINUATION_1_0(time_expire, block);
-static void time_expire(block bk)
-{
-    run_solver(bk->ev);
-}
+//static CONTINUATION_1_0(time_expire, block);
+//static void time_expire(block bk)
+//{
+//    run_solver(bk->ev);
+//}
 
 // xxx  - handle the bound case
 static void build_time(block bk, bag b, uuid n, execf *e, flushf *f)
@@ -323,8 +323,9 @@ static void build_time(block bk, bag b, uuid n, execf *e, flushf *f)
     // requested for by the block..this should really just be
     // 'ask the commit time', with a different thing for
     // 'create an object for each time'
-    timer t = register_periodic_timer(tcontext()->t, interval, cont(bk->h, time_expire, bk));
-    vector_insert(bk->cleanup, cont(bk->h, remove_timer, t));
+    //  timer t = register_periodic_timer(tcontext()->t, interval, cont(bk->h, time_expire, bk));
+    timer t = 0;
+    // vector_insert(bk->cleanup, cont(bk->h, remove_timer, t));
     *e =  cont(bk->h,
                do_time,
                bk,

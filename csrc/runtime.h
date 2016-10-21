@@ -39,7 +39,9 @@ typedef struct perf {
 } *perf;
 
 
-typedef closure(committer, bag);
+typedef struct edb *edb;
+
+typedef closure(committer, edb);
 typedef closure(listener, value, value, value, uuid);
 typedef closure(scanner, int, listener, value, value, value);
 
@@ -76,7 +78,7 @@ static value compress_fat_strings(value v)
 typedef closure(evaluation_result, multibag, multibag, boolean);
 
 typedef closure(error_handler, char *, bag, uuid);
-typedef closure(bag_handler, bag);
+typedef closure(bag_handler, edb);
 typedef closure(bag_block_handler, bag, vector, vector); // source, inserts, removes
 
 typedef void (*commit_function)(multibag backing, multibag delta, closure(finish, boolean));

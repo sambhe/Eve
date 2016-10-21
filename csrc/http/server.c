@@ -13,7 +13,7 @@ typedef struct session {
     // so we stash them here and cant execute piplined or
     // out of order -- xx fix
     edb last_headers;
-    edb last_headers_root;
+    uuid last_headers_root;
 
     heap h;
     uuid self;
@@ -120,28 +120,9 @@ static void http_eval_result(http_server s,
         http_send_response(s, b, e);
         return;
     }
-    
-    edb_foreach_ev((edb)b, e, sym(upgrade), child){
-        session hs = table_find(s->sessions, e);
-        heap jh = allocate_rolling(init, sstring("json session"));
-        evaluation ev = process_resolve(pb, child);
-        if (ev) {
-            endpoint ws =  websocket_send_upgrade(hs->h, hs->e,
-                                                  hs->last_headers,
-                                                  hs->last_headers_root);
-            parse_json(jh, ws, create_json_session(jh, ev, ws));
-            edb session_connect = create_edb(jh, 0);
-            
-            edb_insert(session_connect,
-                       generate_uuid(),
-                       sym(tag),
-                       sym(session-connect), 0);
-            //  inject_event(ev, session_connect);
-        } else {
-            prf ("unable to correlate upgrade process\n");
-        }
-    }
+    // used to be a websocket upgrade here
 }
+
 
 
 
@@ -162,8 +143,7 @@ http_server create_http_server(station p, evaluation ev, process_bag pb)
     vector_insert(ev->default_scan_scopes, sid);
     vector_insert(ev->default_insert_scopes, sid);
 
-    // use a listener instead
-    ev->complete = cont(h, http_eval_result, s, pb, sid),
+    // add a listener for the browser bag
 
     tcp_create_server(h,
                       p,

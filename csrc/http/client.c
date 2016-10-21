@@ -4,7 +4,7 @@
 
 struct client {
     heap h;
-    bag b;
+    edb b;
     uuid request;
     http_handler response;
     vector queued;

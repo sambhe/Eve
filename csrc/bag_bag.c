@@ -1,22 +1,5 @@
 #include <runtime.h>
 
-void compile_into_bag(evaluation ev, bag b, estring code) {
-    heap h = ev->working;
-    buffer codebuf = alloca_wrap_buffer(code->body, code->length);
-    bag compiler_bag = (bag)create_edb(h, 0);
-    bag compiled = compile_eve(ev->h, codebuf, false);
-
-    //    vector_foreach(blocks, block) {
-    //        vector_insert(b->blocks, block);
-    //    }
-
-}
-
-static CONTINUATION_1_4(bagbag_insert, evaluation, value, value, value, uuid bku);
-static void bagbag_insert(evaluation ev, value e, value a, value v, uuid bku)
-{
-}
-
 static CONTINUATION_1_1(bagbag_commit, evaluation, edb)
 static void bagbag_commit(evaluation ev, edb s)
 {
@@ -32,20 +15,12 @@ static void bagbag_commit(evaluation ev, edb s)
         }
     }
 
-    edb_foreach_ev(s, e, sym(bags), v, m) {
+    edb_foreach_ev(s, e, sym(bags), v) {
         // we're going to silent refuse to bind fruits into the bag namespace?
         // maybe this map should be raw eavs?
         bag b;
         if (table_find(ev->t_input, e)) {
             table_set(ev->scopes, v, e);
-        }
-    }
-
-    edb_foreach_ev(s, e, sym(code), code, m) {
-        bag b = (bag)table_find(ev->t_input, e);
-
-        if(b) {
-            compile_into_bag(ev, b, code);
         }
     }
 }
@@ -65,11 +40,9 @@ void bagbag_scan(evaluation ev, int sig, listener out, value e, value a, value v
 bag init_bag_bag(evaluation ev)
 {
     bag b = allocate(ev->h, sizeof(struct bag));
-    b->insert = cont(ev->h, bagbag_insert, ev);
     b->scan = cont(ev->h, bagbag_scan, ev);
     b->commit = cont(ev->h, bagbag_commit, ev);
     b->listeners = allocate_table(ev->h, key_from_pointer, compare_pointer);
-    b->blocks = allocate_vector(ev->h, 0);
     return b;
 }
 

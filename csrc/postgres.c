@@ -24,7 +24,7 @@ typedef struct pgtable {
 
 typedef struct postgres {
     struct bag b;
-    bag backing;
+    edb backing;
     state s;
     heap h;
     endpoint e;
@@ -361,7 +361,7 @@ static void pg_scan_complete(postgres p, int sig, listener out, value e, value a
                 table_dump(p, t, ignore);
                 // cont(p->h, pg_scan_complete, p, sig, out, e, a, v));
             } else {
-                apply(p->backing->scan, sig, out, e, a, v);
+                apply(p->backing->b.scan, sig, out, e, a, v);
             }
         }
         return;
@@ -375,7 +375,7 @@ static void pg_scan_complete(postgres p, int sig, listener out, value e, value a
                 table_dump(p, t, cont(p->h, pg_scan_complete, p, sig, out, e, a, v));
                 return;
             }
-            apply(p->backing->scan, sig, out, e, a, v);
+            apply(p->backing->b.scan, sig, out, e, a, v);
         }
     }
 }
@@ -399,7 +399,7 @@ bag connect_postgres(station s, estring user, estring password, estring database
     p->h = h;
     p->s = initialize;
     p->user = user;
-    p->backing = (bag)create_edb(h, 0);
+    p->backing = create_edb(h, 0);
     p->password = password;
     p->database = database;
     p->tables = create_value_table(p->h);

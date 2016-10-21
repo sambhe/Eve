@@ -39,20 +39,14 @@ luac.out
 *.x86_64
 *.hex
 
-lua_modules/
-
 *~
 build/continuation_templates.h
 build/eve
 build/path.c
 build/Eve.xcodeproj/xcuserdata
 build/Eve.xcodeproj/*/xcuserdata
-build/lua
-build/luajit-2.0
-build/*.js
 build/db
 build/package
 build/package.dSYM
 build/staticdb
 build/contgen*
-build/*.map

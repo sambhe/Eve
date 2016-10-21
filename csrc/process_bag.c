@@ -117,11 +117,9 @@ process_bag process_bag_init(multibag persisted, boolean tracing)
     heap h = allocate_rolling(init, sstring("process_bag"));
     process_bag pb = allocate(h, sizeof(struct process_bag));
     pb->h = h;
-    pb->b.insert = cont(h, process_bag_insert, pb);
     pb->b.scan = cont(h, process_bag_scan, pb);
     pb->b.listeners = allocate_table(h, key_from_pointer, compare_pointer);
     pb->b.commit = cont(h, process_bag_commit, pb);
-    pb->b.blocks = allocate_vector(h, 1);
     pb->processes = create_value_table(h);
     pb->persisted = persisted;
     pb->tracing = tracing;

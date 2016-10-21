@@ -1,6 +1,5 @@
 #include <unix_internal.h>
 #include <http/http.h>
-#include <luanne.h>
 
 static boolean enable_tracing = false;
 static char *exec_path;
@@ -62,7 +61,7 @@ extern void *db_start, *db_end;
 bag staticdb()
 {
     edb e = create_edb(init, 0);
-    buffer_handler n = deserialize_into_bag(init, (bag)e);
+    buffer_handler n = deserialize_into_bag(init, e);
     apply(n, wrap_buffer(init, &db_start, ((u64)&db_end) - ((u64)&db_start)), ignore);
     return (bag)e;
 }
@@ -96,7 +95,7 @@ static void start_http_server(buffer source)
     
 
     heap hc = allocate_rolling(pages, sstring("eval"));
-    bag n = compile_eve(h, source, enable_tracing);
+    //    bag n = compile_eve(h, source, enable_tracing);
     
     evaluation ev;
     //    evaluation ev = build_evaluation(h, n);
@@ -133,22 +132,6 @@ static void do_port(char *x)
 static void do_tracing(char *x)
 {
     enable_tracing = true;
-}
-
-static void do_parse(char *x)
-{
-    interpreter c = get_lua();
-    lua_run_module_func(c, read_file_or_exit(init, x), "parser", "printParse");
-    default_behaviour = false;
-    free_lua(c);
-}
-
-static void do_analyze(char *x)
-{
-    interpreter c = get_lua();
-    lua_run_module_func(c, read_file_or_exit(init, x), "compiler", "analyzeQuiet");
-    default_behaviour = false;
-    free_lua(c);
 }
 
 static CONTINUATION_0_0(hey);
@@ -252,9 +235,7 @@ static command commands;
 static void print_help(char *x);
 
 static struct command command_body[] = {
-    {"p", "parse", "parse and print structure", true, do_parse},
     {"D", "db", "connect to postgres", true, do_db},
-    {"a", "analyze", "parse order print structure", true, do_analyze},
     {"s", "serve", "use the subsequent eve file to serve http requests", true, run_eve_http_server},
     {"P", "port", "serve http on passed port", true, do_port},
     {"h", "help", "print help", false, print_help},
@@ -305,7 +286,7 @@ static void start_cluster(buffer membership_source)
     table_set(scopes, sym(timer), tid);
 
     heap hc = allocate_rolling(pages, sstring("eval"));
-    bag n = compile_eve(h, membership_source, enable_tracing);
+    //  bag n = compile_eve(h, membership_source, enable_tracing);
     //    evaluation ev = build_evaluation(h, sym(membership), scopes, persisted,
     //                                     (evaluation_result)ignore, cont(h, handle_error_terminal), n);
     //     bag tb = timer_bag_init(ev);
@@ -381,7 +362,7 @@ buffer read_file_or_exit(heap h, char *path)
     if (b) {
         return b;
     } else {
-        printf("can't read a file: %s\n", path);
+        prf("can't read a file: %s\n", path);
         exit(1);
     }
 }

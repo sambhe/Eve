@@ -44,7 +44,7 @@ static void evaluation_complete(evaluation s)
 
 static void merge_multibag_bag(evaluation ev, table *d, uuid u, bag s)
 {
-    bag bd;
+    edb bd;
     if (!*d) {
         *d = create_value_table(ev->working);
     }
@@ -80,46 +80,6 @@ static void run_block(evaluation ev)
     }
 
     destroy(bh);
-}
-
-const int MAX_F_ITERATIONS = 250;
-const int MAX_T_ITERATIONS = 50;
-
-static void fixedpoint_error(evaluation ev, vector diffs, char * message) {
-    prf("ERROR: %s\n", message);
-
-    uuid error_data_id = generate_uuid();
-    bag edata = (bag)create_edb(ev->working, 0);
-    uuid error_diffs_id = generate_uuid();
-    edb_insert(edata, error_diffs_id, sym(tag), sym(array), 0);
-
-    table eavs = create_value_table(ev->working);
-    int diff_ix = 1;
-    vector_foreach(diffs, diff) {
-        uuid diff_id = generate_uuid();
-        apply(edata->insert, error_diffs_id, box_float((float)(diff_ix++)), diff_id, 1, 0);
-
-        edb_foreach((edb)diff, e, a, v, bku) {
-            value key = box_float(value_as_key(e) ^ value_as_key(a) ^ value_as_key(v));
-            uuid eav_id = table_find(eavs, key);
-            if(!eav_id) {
-                eav_id = generate_uuid();
-                edb_insert(edata, eav_id, sym(entity), e, bku);
-                edb_insert(edata, eav_id, sym(attribute), a, bku);
-                edb_insert(edata, eav_id, sym(value), v, bku);
-                table_set(eavs, key, eav_id);
-            }
-
-            if(c > 0) {
-                apply(edata->insert, diff_id, sym(insert), eav_id, 1, bku);
-            } else {
-                apply(edata->insert, diff_id, sym(remove), eav_id, 1, bku);
-            }
-        }
-    }
-
-    apply(ev->error, message, edata, error_diffs_id);
-    destroy(ev->working);
 }
 
 extern string print_dot(heap h, block bk, table counters);
@@ -224,8 +184,7 @@ evaluation build_evaluation(heap h,
 
     uuid debug_bag_id = generate_uuid();
     table_set(ev->scopes, sym(debug), debug_bag_id);
-    table_set(ev->t_input, debug_bag_id, init_debug_bag(ev));
-
+    
     table_foreach(ev->scopes, name, id) {
         bag input_bag = table_find(ev->t_input, id);
         if(!input_bag) continue;

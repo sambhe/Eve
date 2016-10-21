@@ -2,24 +2,3 @@
 
 %1 server {evesrc/http-server.eve}
 %1 membership {evesrc/membership.eve}
-
-%3 name client.js
-%3 content-type application/eve
-%3 content {build/client.js}
-
-%4 name db.js
-%4 content-type application/javascript
-%4 content {build/db.js}
-
-%5 name editor.js
-%5 content-type application/javascript
-%5 content {build/editor.js}
-
-%6 name editor.js
-%6 content-type application/javascript
-%6 content {build/renderer.js}
-
-%7 name util.js
-%7 content-type application/javascript
-%7 content {build/util.js}
-

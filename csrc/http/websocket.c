@@ -166,8 +166,8 @@ websocket new_websocket(heap h)
 
 
 
-static CONTINUATION_1_3(header_response, websocket, bag, uuid, register_read);
-static void header_response(websocket w, bag b, uuid n, register_read r)
+static CONTINUATION_1_3(header_response, websocket, edb, uuid, register_read);
+static void header_response(websocket w, edb b, uuid n, register_read r)
 {
     // xxx - should allow plumbing for simple bodies to just dump
     // into the response body

@@ -163,7 +163,7 @@ static void edb_scan_sync(edb b, int sig, listener out, value e, value a, value 
 }
 
 // should return status?
-static void edb_insert(edb b, value e, value a, value v, uuid block_id)
+void edb_insert(edb b, value e, value a, value v, uuid block_id)
 {
     leaf final;
 

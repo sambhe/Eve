@@ -1,20 +1,13 @@
 ## to download and install a dedicated copy of luajit:
-LUAJIT_INSTALL = ./lua
-#LUAJIT_INSTALL = /usr/local
-LUAJIT = $(LUAJIT_INSTALL)/bin/luajit-2.1.0-beta2
-LIBLUAJIT = $(LUAJIT_INSTALL)/lib/libluajit-5.1.a
-LUAJIT_INCLUDES = $(LUAJIT_INSTALL)/include/luajit-2.1
+
 BUILD = $(CURDIR)
 
-CC = cc -std=c99
 
-#find a better way to do this
-.SECONDARY: ../build/client.js ../build/editor.js ../build/renderer.js ../build/util.js
 
 PLATFORM = $(shell uname)
 
 ifeq ($(PLATFORM), Darwin)
-  # luajit has some interesting address space requirements
+  # revisit the address space layout post-lua
   LINK += -pagezero_size 10000 -image_base 100000000 -Wl,-no_pie
   INCLUDES += --include ../csrc/unix/darwin/darwin.h
   S = _
@@ -33,11 +26,7 @@ VPATH += ../evesrc
 VPATH += ../csrc/core
 VPATH += ../csrc/http
 VPATH += ../csrc/crypto
-VPATH += ../csrc/luautf8
-VPATH += ../csrc/luapower
 VPATH += ../csrc/dns
-VPATH += ../jssrc
-VPATH += ../src
 VPATH += ../csrc
 
 CFLAGS = -g
@@ -45,45 +34,26 @@ CFLAGS = -g
 opt: eve
 opt: CFLAGS = -O2
 
-LUAPOWER = bundle.o
-UTF = lutf8lib.o
+KCC = cc -std=gnu99 $(CFLAGS)
+
 COMPILER = compiler.o error.o fs.o parser.o util.o set.o color.o build.o implicationResolver.o db.o
 UNIX =  unix_util.o region.o select.o tcp_socket.o process.o page.o udp.o thread.o
 UNIX_H = unix_internal.h unix.h
 CORE = buffer.o table.o vector.o format.o rolling.o string.o pqueue.o timer.o field.o
 CORE_H = bswap.h pqueue.h vector.h buffer.h heap.h timer.h continuation.h core.h string.h table.h atomic.h
 EXEC = exec_expression.o exec_edb.o exec_string.o exec_aggregate.o exec.o
-EVE = bag_bag.o runner.o envbag.o json_request.o staticdb.o luanne.o postgres.o\
-      runner.o json_request.o filebag.o $(EXEC) udpbag.o
+EVE = bag_bag.o runner.o envbag.o staticdb.o postgres.o runner.o filebag.o $(EXEC) udpbag.o
 RUNTIME = init.o uuid.o estring.o types.o path.o serialize.o log.o edb.o station.o $(UNIX) $(CORE)
-RUNTIME_H = luanne.h runtime.h estring.h number.h types.h exec.h edb.h multibag.h thread.h
+RUNTIME_H = runtime.h estring.h number.h types.h exec.h edb.h multibag.h thread.h
 HTTP = server.o websocket.o base64.o sha1.o json.o client.o http.o hmac_sha2.o sha256.o md5.o
 DNS = dns.o dnsbag.o
 HTTP_H = http.h
-CONTENT = index.html system.js microReact.js codemirror.js codemirror.css commonmark.js\
-          uuid.js client.js renderer.js editor.js db.js http-server.eve
-
-luajit-2.0:
-	git clone http://luajit.org/git/luajit-2.0.git
-
-./lua/bin/luajit-2.1.0-beta2: luajit-2.0
-	(cd luajit-2.0 ; git checkout v2.1.0-beta2 ; make PREFIX=$(BUILD)/lua; make install PREFIX=$(BUILD)/lua)
 
 contgen: contgen.c
-	$(CC) $< -g -o $@
+	$(CC) $< -o $@
 
 continuation_templates.h: contgen
 	$(BUILD)/contgen 10 10 > continuation_templates.h
-
-lutf8lib.o: lutf8lib.c
-	$(CC) -c -g -I$(LUAJIT_INCLUDES) $^
-
-bundle.o: bundle.c
-	$(CC) -c -g -I$(LUAJIT_INCLUDES) $^
-
-
-%.js: $(BUILD)/../jssrc/%.ts
-	cd .. && tsc --pretty
 
 path.c: Makefile
 	echo 'char *pathroot = "$(BUILD)/../";' > path.c
@@ -91,23 +61,20 @@ path.c: Makefile
 package: package.o path.o $(RUNTIME) 
 	$(CC) $^ -lm -lpthread -o $@
 
-staticdb: $(DB_INCLUDES) package $(CONTENT) manifest
+staticdb: $(DB_INCLUDES) package manifest
 	$(BUILD)/package < manifest > staticdb
 
 staticdb.o: staticdb
 	$(CC) wrap.S -DSTART=$(S)db_start -DEND=$(S)db_end -DFILE='"$<"' -c -o $@
 
 %.o: %.c continuation_templates.h $(UNIX_H) $(CORE_H) $(RUNTIME_H) $(HTTP_H)
-	$(CC) -std=gnu99 -I../csrc/unix -I../csrc/core -I../csrc -I. $(INCLUDES) -I$(LUAJIT_INCLUDES) $(CFLAGS) -c $<
+	$(KCC) -I../csrc/unix -I../csrc/core -I../csrc -I. $(INCLUDES) -c $<
 
-%.o: %.lua $(LUAJIT)
-	$(LUAJIT) -b -g $< $@
-
-eve: $(COMPILER) $(UTF) $(LUAPOWER) $(HTTP) $(RUNTIME) $(DNS) $(EVE) eve.o
-	$(CC) $^ $(LIBLUAJIT) $(LINK) -lm -ldl  -o $@
+eve: $(UTF) $(HTTP) $(RUNTIME) $(DNS) $(EVE) eve.o
+	$(CC) $^ $(LINK) -lm -ldl  -o $@
 
 clean:
-	rm -f *.o eve continuation_templates.h *.js *.js.map db
+	rm -f *.o eve continuation_templates.h db
 
 distclean:
 	make clean ; rm -rf lua luajit-2.0

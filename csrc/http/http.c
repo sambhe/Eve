@@ -117,7 +117,7 @@ reader new_parser(heap h, http_handler result, value a, value b, value c)
     p->u = generate_uuid();
     p->hu = generate_uuid();
     
-    apply(p->b->insert, p->u, sym(headers), p->hu, 1, 0);
+    edb_insert(p->b, p->u, sym(headers), p->hu, 0);
     p->headers[0] = a;
     p->headers[1] = b;
     p->headers[2] = c;
