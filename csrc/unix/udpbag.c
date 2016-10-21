@@ -71,9 +71,8 @@ static void udp_commit(udp_bag ub, edb s)
 static CONTINUATION_1_2(udp_reception, udp_bag, station, buffer);
 static void udp_reception(udp_bag u, station s, buffer b)
 {
-    prf("input - maka bag\n");
     uuid p = generate_uuid();
-    bag in = (bag)create_edb(u->h, 0);
+    edb in = create_edb(u->h, 0);
     apply(deserialize_into_bag(u->h, in), b, ignore);
     table_foreach(((bag)u)->listeners, t, _) 
         apply((bag_handler)t, in);
